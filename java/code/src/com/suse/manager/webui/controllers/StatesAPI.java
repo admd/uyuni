@@ -54,7 +54,7 @@ import com.redhat.rhn.taskomatic.TaskomaticApi;
 
 import com.suse.manager.reactor.messaging.ApplyStatesEventMessage;
 import com.suse.manager.reactor.utils.LocalDateTimeISOAdapter;
-import com.suse.manager.reactor.utils.OptionalTypeAdapterFactory;
+import com.suse.salt.netapi.parser.OptionalTypeAdapterFactory;
 import com.suse.manager.utils.MinionServerUtils;
 import com.suse.manager.webui.errors.NotFoundException;
 import com.suse.manager.webui.services.ConfigChannelSaltManager;

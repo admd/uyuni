@@ -22,7 +22,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.suse.manager.reactor.utils.LocalDateTimeISOAdapter;
-import com.suse.manager.reactor.utils.OptionalTypeAdapterFactory;
+import com.suse.salt.netapi.parser.OptionalTypeAdapterFactory;
 import com.suse.manager.reactor.utils.ZonedDateTimeISOAdapter;
 import com.suse.manager.webui.utils.salt.custom.ChecksumAdapter;
 import com.suse.manager.webui.utils.salt.custom.ImageChecksum.Checksum;

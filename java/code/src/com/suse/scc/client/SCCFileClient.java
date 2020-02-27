@@ -17,7 +17,7 @@ package com.suse.scc.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.rhn.manager.content.ProductTreeEntry;
-import com.suse.manager.reactor.utils.OptionalTypeAdapterFactory;
+import com.suse.salt.netapi.parser.OptionalTypeAdapterFactory;
 import com.suse.scc.model.SCCRepositoryJson;
 import com.suse.scc.model.SCCOrderJson;
 import com.suse.scc.model.SCCProductJson;

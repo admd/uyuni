@@ -59,7 +59,7 @@ import com.suse.manager.kubernetes.KubernetesManager;
 import com.suse.manager.model.gatherer.GathererModule;
 import com.suse.manager.model.kubernetes.ImageUsage;
 import com.suse.manager.reactor.utils.LocalDateTimeISOAdapter;
-import com.suse.manager.reactor.utils.OptionalTypeAdapterFactory;
+import com.suse.salt.netapi.parser.OptionalTypeAdapterFactory;
 import com.suse.manager.webui.controllers.utils.ImagesUtil;
 import com.suse.manager.webui.errors.NotFoundException;
 import com.suse.manager.webui.services.impl.SaltService;

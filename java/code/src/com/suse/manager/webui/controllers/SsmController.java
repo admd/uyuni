@@ -33,7 +33,7 @@ import com.redhat.rhn.manager.ssm.ScheduleChannelChangesResultDto;
 import com.redhat.rhn.manager.ssm.SsmManager;
 import com.redhat.rhn.manager.system.SystemManager;
 import com.suse.manager.reactor.utils.LocalDateTimeISOAdapter;
-import com.suse.manager.reactor.utils.OptionalTypeAdapterFactory;
+import com.suse.salt.netapi.parser.OptionalTypeAdapterFactory;
 import com.suse.manager.webui.utils.gson.ResultJson;
 import com.redhat.rhn.manager.ssm.SsmServerDto;
 import com.suse.manager.webui.utils.gson.SsmAllowedBaseChannelsJson;
