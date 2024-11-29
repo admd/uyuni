@@ -65,6 +65,7 @@ import com.redhat.rhn.domain.recurringactions.state.InternalState;
 import com.redhat.rhn.domain.recurringactions.state.RecurringConfigChannel;
 import com.redhat.rhn.domain.recurringactions.state.RecurringInternalState;
 import com.redhat.rhn.domain.recurringactions.type.RecurringHighstate;
+import com.redhat.rhn.domain.recurringactions.type.RecurringScapPolicy;
 import com.redhat.rhn.domain.recurringactions.type.RecurringState;
 import com.redhat.rhn.domain.rhnpackage.PackageBreaks;
 import com.redhat.rhn.domain.rhnpackage.PackageConflicts;
@@ -208,7 +209,8 @@ public class AnnotationRegistry {
         TokenChannelAppStream.class,
         PaygDimensionResult.class,
         TailoringFile.class,
-        ScapPolicy.class
+        ScapPolicy.class,
+        RecurringScapPolicy.class
     );
 
     /**
