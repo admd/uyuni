@@ -966,6 +966,16 @@ public class KickstartData extends BaseDomainHelper {
     }
 
     /**
+     * @return true if this distro uses the Agama installer (SLES 16+)
+     */
+    public boolean isAgama() {
+        if (getInstallType() != null) {
+            return getInstallType().isAgama();
+        }
+        return false;
+    }
+
+    /**
      *
      * @return Set of IpRanges for Kickstart
      */

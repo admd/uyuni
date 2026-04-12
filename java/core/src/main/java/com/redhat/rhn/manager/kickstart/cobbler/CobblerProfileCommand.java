@@ -182,6 +182,13 @@ public abstract class CobblerProfileCommand extends CobblerCommand {
     }
 
     /**
+     * @return the current kernel options string, or null if not set
+     */
+    public String getKernelOptions() {
+        return kernelOptions;
+    }
+
+    /**
      * @param kernelOptionsIn The kernelOptions to set.
      */
     public void setKernelOptions(String kernelOptionsIn) {

@@ -29,6 +29,7 @@ import org.apache.struts.action.ActionMapping;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -82,6 +83,10 @@ public class RenderKickstartFileAction extends Action {
                     catch (DownloadException de) {
                         fileContents = de.getContent();
                     }
+                    if (ksdata.isAgama()) {
+                        renderOutput(response, fileContents, "application/json; charset=UTF-8");
+                        return null;
+                    }
                 }
                 else {
                     if (log.isDebugEnabled()) {
@@ -98,18 +103,18 @@ public class RenderKickstartFileAction extends Action {
 
             }
         }
-        renderOutput(response, fileContents);
+        renderOutput(response, fileContents, "text/plain");
         return null;
     }
 
-    private void renderOutput(HttpServletResponse response, String file)
+    private void renderOutput(HttpServletResponse response, String file, String contentType)
             throws IOException {
-        response.setContentType("text/plain");
-        int contentLength = file == null ? 0 : file.getBytes().length;
-        response.setContentLength(contentLength);
-        if (contentLength > 0) {
+        response.setContentType(contentType);
+        byte[] bytes = file == null ? new byte[0] : file.getBytes(StandardCharsets.UTF_8);
+        response.setContentLength(bytes.length);
+        if (bytes.length > 0) {
             OutputStream out = response.getOutputStream();
-            out.write(file.getBytes());
+            out.write(bytes);
             out.flush();
         }
     }

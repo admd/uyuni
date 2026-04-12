@@ -2166,6 +2166,12 @@ and try again.
           <context context-type="sourcefile">/rhn/kickstart/KickstartDetailsEdit</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="kickstart.details.invalid_json" xml:space="preserve">
+        <source>Invalid JSON in Agama profile: {0}</source>
+        <context-group name="ctx">
+          <context context-type="sourcefile">/rhn/kickstart/KickstartDetailsEdit</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="kickstart.delete.success" xml:space="preserve">
         <source>Autoinstallation was deleted successfully.</source>
         <context-group name="ctx">

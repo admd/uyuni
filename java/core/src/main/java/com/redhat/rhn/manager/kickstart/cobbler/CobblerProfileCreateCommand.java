@@ -18,6 +18,7 @@ import com.redhat.rhn.common.conf.ConfigDefaults;
 import com.redhat.rhn.common.validator.ValidatorError;
 import com.redhat.rhn.domain.kickstart.KickstartData;
 import com.redhat.rhn.domain.kickstart.KickstartFactory;
+import com.redhat.rhn.domain.kickstart.KickstartableTree;
 import com.redhat.rhn.domain.user.User;
 import com.redhat.rhn.manager.satellite.CobblerSyncCommand;
 
@@ -103,6 +104,22 @@ public class CobblerProfileCreateCommand extends CobblerProfileCommand {
         prof.setVirtFileSize(Optional.of(ConfigDefaults.get().getDefaultVirtDiskSize()));
         prof.setKickstart(this.ksData.buildCobblerFileName());
         prof.save();
+
+        // Auto-add inst.auto= kernel option for Agama distros, pointing to Uyuni's
+        // rendering endpoint (not Cobbler's) so AgamaProfileRenderer handles variable
+        // substitution and registration injection.
+        KickstartableTree tree = ksData.getKickstartDefaults() != null ?
+                ksData.getKickstartDefaults().getKstree() : null;
+        if (tree != null && tree.getInstallType().isAgama()) {
+            String serverFqdn = ConfigDefaults.get().getJavaHostname();
+            Long orgId = ksData.getOrg().getId();
+            String instAuto = "inst.auto=http://" + serverFqdn +
+                    "/ks/cfg/org/" + orgId + "/label/" + ksData.getLabel();
+            String currentOpts = getKernelOptions() != null ? getKernelOptions() : "";
+            if (!currentOpts.contains("inst.auto=")) {
+                setKernelOptions((currentOpts + " " + instAuto).trim());
+            }
+        }
 
         updateCobblerFields(prof);
 

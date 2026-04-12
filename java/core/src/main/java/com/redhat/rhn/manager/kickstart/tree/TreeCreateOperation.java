@@ -19,6 +19,7 @@ import com.redhat.rhn.domain.channel.Channel;
 import com.redhat.rhn.domain.kickstart.KickstartFactory;
 import com.redhat.rhn.domain.kickstart.KickstartableTree;
 import com.redhat.rhn.domain.user.User;
+import com.redhat.rhn.manager.kickstart.KickstartUrlHelper;
 import com.redhat.rhn.manager.kickstart.cobbler.CobblerCommand;
 import com.redhat.rhn.manager.kickstart.cobbler.CobblerDistroCreateCommand;
 
@@ -69,7 +70,21 @@ public class TreeCreateOperation extends BaseTreeEditOperation {
         StringJoiner kOptsJoiner = new StringJoiner(" ");
         kOptsJoiner.add(kopts);
 
-        if (this.tree.getInstallType().isSUSE()) {
+        if (this.tree.getInstallType().isAgama()) {
+            // Agama boots a live squashfs image; point root= to Uyuni's dist serving path.
+            // Use getKickstartMediaPath() so org-specific trees include /org/ID/ in the URL
+            // (e.g. /ks/dist/org/1/sles16-x86_64 rather than /ks/dist/sles16-x86_64).
+            if (!kopts.contains("root=")) {
+                String mediaPath = new KickstartUrlHelper(this.tree).getKickstartMediaPath();
+                kOptsJoiner.add("root=live:http://" + getServerFqdn() +
+                        mediaPath + "/LiveOS/squashfs.img");
+            }
+            if (!kopts.contains("ip=")) {
+                kOptsJoiner.add("ip=dhcp");
+            }
+            // inst.auto= is added by CobblerProfileCreateCommand when creating the profile
+        }
+        else if (this.tree.getInstallType().isSUSE()) {
             if (!kopts.contains("install=")) {
                 kOptsJoiner.add("install=http://" + getServerFqdn() + "/ks/dist/" + this.tree.getLabel());
             }

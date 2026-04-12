@@ -43,6 +43,7 @@ public class KickstartInstallType extends BaseDomainHelper {
     public static final String RHEL_8 = "rhel_8";
     public static final String RHEL_9 = "rhel_9";
     public static final String GENERIC_RPM = "generic_rpm";
+    public static final String SLES_16_GENERIC = "sles16generic";
 
     // Spacewalk's install type prefixes for some multi-version
     // distros
@@ -182,6 +183,20 @@ public class KickstartInstallType extends BaseDomainHelper {
      */
     public boolean isSLES15() {
         return isSUSE() && getLabel().startsWith(SLES_PREFIX + "15");
+    }
+
+    /**
+     * @return true if the installer type is SLES 16
+     */
+    public boolean isSLES16() {
+        return isSUSE() && getLabel().startsWith(SLES_PREFIX + "16");
+    }
+
+    /**
+     * @return true if this distro uses the Agama installer (SLES 16+)
+     */
+    public boolean isAgama() {
+        return isSLES16();
     }
 
     /**

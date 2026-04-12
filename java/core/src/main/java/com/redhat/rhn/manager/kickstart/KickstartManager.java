@@ -68,6 +68,10 @@ public class KickstartManager extends BaseManager {
      * @return the rendered kickstart contents
      */
     public String renderKickstart(String host, KickstartData data) {
+        if (data.isAgama()) {
+            // For Agama, host substitution is handled during variable substitution
+            return new AgamaProfileRenderer().render(data);
+        }
         return renderKickstart(host, KickstartUrlHelper.getCobblerProfileInternalUrl(data));
     }
 
@@ -94,9 +98,11 @@ public class KickstartManager extends BaseManager {
      * @return the rendered kickstart contents
      */
     public String renderKickstart(KickstartData data) {
+        if (data.isAgama()) {
+            return new AgamaProfileRenderer().render(data);
+        }
         return renderKickstart(KickstartUrlHelper.getCobblerProfileInternalUrl(data));
     }
-
 
     /**
      * Render the kickstart using cobbler and return the contents

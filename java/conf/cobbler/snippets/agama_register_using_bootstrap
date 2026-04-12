@@ -1,0 +1,22 @@
+#!/bin/bash
+# begin SUSE Manager / Uyuni registration (Agama)
+#
+# Variables substituted by Uyuni's AgamaProfileRenderer before the profile is
+# served to the installer — analogous to the Cheetah variables used in AutoYaST
+# snippets:
+#
+#   @@UYUNI_SERVER@@    FQDN of the Uyuni/SUSE Manager server ($redhat_management_server)
+#   @@ACTIVATION_KEY@@  activation key for this profile       ($redhat_management_key)
+#
+# This script runs as an Agama init-script (scripts.init[]) so it executes
+# inside the live installer environment before the actual installation begins.
+
+# SSH is required for Cobbler to reach the installer during the install phase
+systemctl enable sshd --now
+
+# Bootstrap the salt-minion and register the system with Uyuni/SUSE Manager.
+# The bootstrap script configures the minion, sets activation key grains and
+# enables/starts the service on the installed system.
+curl -sSL http://@@UYUNI_SERVER@@/pub/bootstrap/bootstrap.sh | bash -s -- -a @@ACTIVATION_KEY@@
+
+# end SUSE Manager / Uyuni registration (Agama)

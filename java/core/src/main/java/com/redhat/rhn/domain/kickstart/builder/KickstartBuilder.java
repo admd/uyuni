@@ -40,6 +40,9 @@ import com.redhat.rhn.manager.kickstart.KickstartScriptCreateCommand;
 import com.redhat.rhn.manager.kickstart.KickstartWizardHelper;
 import com.redhat.rhn.manager.kickstart.cobbler.CobblerProfileCommand;
 
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,6 +112,18 @@ public class KickstartBuilder {
      */
     public void buildCommands(KickstartData ksData, List<String> lines,
             KickstartableTree tree) {
+        if (tree != null && tree.getInstallType().isAgama()) {
+            // Agama profiles are JSON — validate syntax and skip kickstart command parsing
+            String content = String.join("\n", lines);
+            try {
+                JsonParser.parseString(content);
+            }
+            catch (JsonSyntaxException e) {
+                ValidatorException.raiseException("kickstart.details.invalid_json",
+                        e.getMessage());
+            }
+            return;
+        }
         StringBuilder partitionBuf = new StringBuilder();
         // Grab a list of all the available command names:
         List<KickstartCommandName> availableOptions = KickstartFactory.lookupAllKickstartCommandNames();

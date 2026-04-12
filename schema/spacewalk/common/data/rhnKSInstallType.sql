@@ -66,4 +66,9 @@ insert into rhnKSInstallType (id, label, name)
                 'rhel_9','Red Hat Enterprise Linux 9'
         );
 
+insert into rhnKSInstallType (id, label, name)
+        values (sequence_nextval('rhn_ksinstalltype_id_seq'),
+                'sles16generic','SUSE Linux Enterprise 16 (Agama)'
+        );
+
 commit;
