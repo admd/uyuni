@@ -85,9 +85,14 @@ run_upgrade_scripts() {
     pg_user="${POSTGRES_USER:-postgres}"
     pg_port="${PGPORT:-5432}"
 
+    # Create a temporary HBA file to allow trust auth during upgrade
+    local tmp_hba
+    tmp_hba="$(mktemp)"
+    echo "local all all trust" > "$tmp_hba"
+
     echo "Starting temporary postgres server for upgrade scripts..."
     PGUSER="${PGUSER:-${POSTGRES_USER:-postgres}}" NOTIFY_SOCKET='' \
-        pg_ctl -D "$PGDATA" -o "-c listen_addresses='localhost' -p ${pg_port}" -w start
+        pg_ctl -D "$PGDATA" -o "-c listen_addresses='localhost' -p ${pg_port} -c hba_file=$tmp_hba" -w start
 
     local attempts=30
     local attempt=1
@@ -135,6 +140,7 @@ run_upgrade_scripts() {
     done
 
     echo "Stopping temporary postgres server after upgrade scripts..."
+    rm -f "$tmp_hba"
     PGUSER="${PGUSER:-postgres}" pg_ctl -D "$PGDATA" -m fast -w stop
 }
 

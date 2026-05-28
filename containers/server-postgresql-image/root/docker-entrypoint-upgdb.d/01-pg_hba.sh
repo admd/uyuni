@@ -68,6 +68,15 @@ if [[ "$(< "$HBA_FILE")" != "$NEW_CONFIG" ]]; then
     PG_HBA_CHANGED=1
 fi
 
+# Ensure 'postgres' role exists for local socket connections under peer auth.
+# initdb creates the cluster superuser as POSTGRES_USER (not 'postgres'), so peer
+# auth would fail without a matching 'postgres' role for the OS user.
+if ! PGHOST= PGHOSTADDR= psql -p "${PGPORT:-5432}" -U "${POSTGRES_USER:-postgres}" --no-password --no-psqlrc \
+    -tAc "SELECT 1 FROM pg_roles WHERE rolname = 'postgres'" 2>/dev/null | grep -q 1; then
+    PGHOST= PGHOSTADDR= psql -p "${PGPORT:-5432}" -U "${POSTGRES_USER:-postgres}" --no-psqlrc \
+        -c "CREATE ROLE postgres SUPERUSER LOGIN;"
+fi
+
 # restart database to pickup new pg_hba changes
 if [ -n "$PG_HBA_CHANGED" ]; then
     pg_ctl -D "$PGDATA" reload
