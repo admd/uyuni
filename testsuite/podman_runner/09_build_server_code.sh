@@ -7,6 +7,8 @@ else
   PODMAN_CMD="sudo -i podman"
 fi
 
+src_dir=$(cd $(dirname "$0")/../.. && pwd -P)
+
 $PODMAN_CMD exec server bash -c "cp /testsuite/podman_runner/debug_logging.properties /etc/tomcat/logging.properties"
 
 # Create missing directories that will be created by the new RPM https://github.com/uyuni-project/uyuni/pull/7651
@@ -43,32 +45,12 @@ $PODMAN_CMD exec server bash -c "[ -d /usr/share/susemanager/www/tomcat/webapps 
 #    retry loop only catches ConnectionResetError/ConnectionRefusedError/HTTPError, so
 #    URLError escapes immediately with no retry.
 #    Fix: outer retry catches URLError with increasing backoff.
-$PODMAN_CMD exec server bash -c 'cat > /usr/local/bin/obs-to-maven << '"'"'PYEOF'"'"'
-#!/usr/bin/env python3
-import socket, urllib.error, time, sys, logging
-socket.setdefaulttimeout(30)
-import obs_maven.repo as repo
-import obs_maven.core as core
-_orig_get_binary = repo.Repo.get_binary
-def _get_binary_with_retry(self, path, target, mtime):
-    for attempt in range(1, 5):
-        try:
-            _orig_get_binary(self, path, target, mtime)
-            return
-        except urllib.error.URLError as e:
-            if attempt < 4:
-                wait = 30 * attempt
-                logging.warning("obs-to-maven: URLError on attempt %d/4: %s. Retrying in %ds...", attempt, e, wait)
-                time.sleep(wait)
-            else:
-                raise
-repo.Repo.get_binary = _get_binary_with_retry
-sys.exit(core.main())
-PYEOF
-chmod +x /usr/local/bin/obs-to-maven'
+$PODMAN_CMD cp ${src_dir}/testsuite/podman_runner/obs-to-maven-wrapper.py server:/usr/local/bin/obs-to-maven
+$PODMAN_CMD exec server chmod +x /usr/local/bin/obs-to-maven
 
 set +e # Temporarily disable 'exit on error'
-$PODMAN_CMD exec server bash -c '
+# Use a heredoc to avoid complex quoting and shell parsing issues for multiline scripts
+$PODMAN_CMD exec -i server bash << 'EOF'
   MAX_WAIT=1200
   RETRY_DELAY=60
   START_TIME=$(date +%s)
@@ -86,7 +68,7 @@ $PODMAN_CMD exec server bash -c '
     sleep ${RETRY_DELAY}
   done
   echo "Ant Ivy build succeeded."
-'
+EOF
 ANT_BUILD_IVY_COMMAND=$?
 set -e # Re-enable 'exit on error'
 
