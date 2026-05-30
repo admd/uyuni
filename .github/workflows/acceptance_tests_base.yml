@@ -284,6 +284,10 @@ jobs:
         if: ${{ !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' }}
         run: ./testsuite/podman_runner/${{ inputs.tests }}
 
+      - name: Feature timing report
+        if: ${{ always() && !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' }}
+        run: sudo -i podman exec controller bash --login -c "cd /testsuite && rake utils:timing_report" || true
+
       - name: Upload Cucumber JSON Reports
         if: ${{ always() && !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' }}
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 #v5.0.0

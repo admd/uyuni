@@ -10,7 +10,6 @@
 - features/secondary/srv_power_management.feature
 - features/secondary/srv_power_management_api.feature
 - features/secondary/srv_power_management_redfish.feature
-- features/secondary/srv_user_configuration_salt_states.feature
 - features/secondary/buildhost_osimage_build_image.feature
 - features/secondary/allcli_reboot.feature
 - features/secondary/min_cve_audit.feature

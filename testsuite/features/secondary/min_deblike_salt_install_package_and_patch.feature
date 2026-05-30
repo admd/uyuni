@@ -17,7 +17,7 @@ Feature: Install and upgrade package on the Debian-like minion via Salt through 
     When I remove package "andromeda-dummy" from this "deblike_minion"
 
   Scenario: Log in as org admin user
-    Given I am authorized
+    Given I am authorized for the "Admin" section
 
   Scenario: Pre-requisite: refresh package list and check newly installed packages on Debian-like minion
     Given I am on the Systems overview page of this "deblike_minion"

@@ -338,6 +338,54 @@ namespace :utils do
     sh "cp -r cucumber_report/. #{result_folder}/cucumber_report/"
   end
 
+  desc 'Show per-feature timing stats from cucumber JSON reports. Usage: rake utils:timing_report or rake "utils:timing_report[results/]"'
+  task :timing_report, [:results_dir] do |_t, args|
+    require 'json'
+    dir = args[:results_dir] || result_folder
+    json_files = Dir.glob("#{dir}/**/*.json").reject { |f| File.zero?(f) }
+    abort "No JSON report files found in #{dir}" if json_files.empty?
+
+    feature_stats = Hash.new { |h, k| h[k] = { duration_ns: 0, scenarios: 0, failed: 0 } }
+
+    json_files.each do |json_file|
+      features = JSON.parse(File.read(json_file))
+      features.each do |feature|
+        uri = feature['uri'] || feature['id'] || 'unknown'
+        (feature['elements'] || []).each do |scenario|
+          next if scenario['type'] == 'background'
+
+          scenario_ns = (scenario['steps'] || []).sum do |step|
+            step.dig('result', 'duration').to_i
+          end
+          feature_stats[uri][:duration_ns] += scenario_ns
+          feature_stats[uri][:scenarios] += 1
+          feature_stats[uri][:failed] += 1 if scenario.dig('result', 'status') == 'failed' ||
+                                               (scenario['steps'] || []).any? { |s| s.dig('result', 'status') == 'failed' }
+        end
+      end
+    rescue JSON::ParserError => e
+      warn "WARNING: Could not parse #{json_file}: #{e.message}"
+    end
+
+    sorted = feature_stats.sort_by { |_, v| -v[:duration_ns] }
+    total_ns = sorted.sum { |_, v| v[:duration_ns] }
+
+    puts "\n#{'Feature'.ljust(75)} #{'Scenarios'.rjust(9)} #{'Failed'.rjust(6)} #{'Duration'.rjust(10)}"
+    puts '-' * 105
+    sorted.each do |uri, stats|
+      name = File.basename(uri, '.feature').ljust(75)
+      secs = (stats[:duration_ns] / 1_000_000_000.0).round(1)
+      mins, secs_rem = secs.divmod(60)
+      duration_str = mins > 0 ? "#{mins}m#{secs_rem.round(1)}s" : "#{secs}s"
+      failed_str = stats[:failed] > 0 ? stats[:failed].to_s : '-'
+      puts "#{name} #{stats[:scenarios].to_s.rjust(9)} #{failed_str.rjust(6)} #{duration_str.rjust(10)}"
+    end
+    total_secs = (total_ns / 1_000_000_000.0).round(1)
+    total_mins, total_secs_rem = total_secs.divmod(60)
+    puts '-' * 105
+    puts "#{'TOTAL'.ljust(75)} #{sorted.sum { |_, v| v[:scenarios] }.to_s.rjust(9)} #{''.rjust(6)} #{(total_mins.to_s + 'm' + total_secs_rem.round(1).to_s + 's').rjust(10)}"
+  end
+
   desc 'Collect and tag flaky tests'
   task :collect_and_tag_flaky_tests, [:ci_label] do |_t, args|
     ci_label = args[:ci_label].to_s.strip
