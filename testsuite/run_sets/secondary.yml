@@ -30,7 +30,6 @@
 - features/secondary/min_action_chain.feature
 - features/secondary/minssh_action_chain.feature
 - features/secondary/allcli_action_chain.feature
-- features/secondary/min_recurring_action.feature
 - features/secondary/min_change_software_channel.feature
 - features/secondary/proxy_container_cobbler_pxeboot.feature
 - features/secondary/proxy_container_retail_pxeboot.feature

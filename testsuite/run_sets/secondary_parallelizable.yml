@@ -97,5 +97,6 @@
 - features/secondary/min_docker_api.feature
 - features/secondary/min_retracted_patches.feature
 - features/secondary/min_timezone.feature
+- features/secondary/min_recurring_action.feature
 
 ## Parallelizable Secondary features END ##

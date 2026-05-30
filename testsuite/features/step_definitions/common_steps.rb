@@ -215,7 +215,7 @@ end
 
 # action chains
 When(/^I check radio button "(.*?)"$/) do |radio_button|
-  if has_checked_field?(radio_button)
+  if has_checked_field?(radio_button, wait: 0)
     log("Warning: Radio button '#{radio_button}' is already checked")
   else
     raise ScriptError, "#{radio_button} can't be checked" unless choose(radio_button)
