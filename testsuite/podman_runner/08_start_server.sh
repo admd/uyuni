@@ -20,6 +20,10 @@ wait_for_server_ready() {
         if [ $((current_time - start_time)) -ge $timeout ]; then
             echo ""
             echo "Timeout reached while waiting for Tomcat to restart."
+            echo "--- DEBUG DUMP ---"
+            $podman_cmd exec server systemctl status tomcat ||:
+            $podman_cmd exec server journalctl -u tomcat --no-pager | tail -n 50 ||:
+            echo "--- END DEBUG DUMP ---"
             return 1
         fi
         printf "."
