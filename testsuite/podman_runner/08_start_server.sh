@@ -21,8 +21,14 @@ wait_for_server_ready() {
             echo ""
             echo "Timeout reached while waiting for Tomcat to restart."
             echo "--- DEBUG DUMP ---"
-            $podman_cmd exec server systemctl status tomcat ||:
-            $podman_cmd exec server journalctl -u tomcat --no-pager | tail -n 50 ||:
+            $podman_cmd exec server systemctl status tomcat apache2 ||:
+            $podman_cmd exec server journalctl -u apache2 --no-pager | tail -n 30 ||:
+            $podman_cmd exec server journalctl -u tomcat --no-pager | tail -n 30 ||:
+            echo "--- Direct Tomcat HTTP check ---"
+            $podman_cmd exec server curl -fs http://localhost:8080/rhn/Login.do -o /dev/null -w "%{http_code}" ||:
+            echo ""
+            echo "--- Apache2 HTTPS check verbose ---"
+            $podman_cmd exec server curl -kfv https://localhost/rhn/Login.do -o /dev/null 2>&1 | tail -n 20 ||:
             echo "--- END DEBUG DUMP ---"
             return 1
         fi
