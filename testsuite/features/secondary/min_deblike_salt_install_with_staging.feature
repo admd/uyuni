@@ -61,6 +61,7 @@ Feature: Install a package on the Debian-like minion with staging enabled
     And I wait for "orion-dummy-1.1" to be installed on "deblike_minion"
 
   Scenario: Install patch in the future and check for staging on Debian-like minion
+    Given I am on the Systems overview page of this "deblike_minion"
     When I follow "Software" in the content area
     And I follow "Patches" in the content area
     And I enter "virgo" as the filtered synopsis

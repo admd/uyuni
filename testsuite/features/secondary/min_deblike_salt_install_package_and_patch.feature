@@ -28,7 +28,16 @@ Feature: Install and upgrade package on the Debian-like minion via Salt through 
     And I wait until package "virgo-dummy" is installed on "deblike_minion" via spacecmd
     And I wait until package "andromeda-dummy" is removed from "deblike_minion" via spacecmd
 
+  Scenario: Pre-requisite: ensure the errata cache is computed for Debian-like minion
+    When I follow the left menu "Admin > Task Schedules"
+    And I follow "errata-cache-default"
+    And I follow "errata-cache-bunch"
+    And I click on "Single Run Schedule"
+    Then I should see a "bunch was scheduled" text
+    When I wait until the table contains "FINISHED" or "SKIPPED" followed by "FINISHED" in its first rows
+
   Scenario: Install a patch on the Debian-like minion
+    Given I am on the Systems overview page of this "deblike_minion"
     When I follow "Software" in the content area
     And I follow "Patches" in the content area
     When I check "3456-1" in the list
