@@ -33,6 +33,8 @@ wait_for_server_ready() {
 
 src_dir=$(cd $(dirname "$0")/../.. && pwd -P)
 
+SERVER_IMAGE=${PREBUILT_SERVER_IMAGE:-"ghcr.io/$UYUNI_PROJECT/uyuni/ci-test-server-all-in-one-dev:$UYUNI_VERSION"}
+
 setup_pm_path=`$PODMAN_CMD run -ti ghcr.io/$UYUNI_PROJECT/uyuni/ci-test-server-all-in-one-dev:$UYUNI_VERSION sh -c 'rpm -ql spacewalk-setup | grep Setup.pm' | tr -d '\r'`
 
 $PODMAN_CMD run --cap-add AUDIT_CONTROL \
@@ -102,7 +104,7 @@ $PODMAN_CMD run --cap-add AUDIT_CONTROL \
     -p 4506:4506 \
     -d --name=server \
     --network network \
-    ghcr.io/$UYUNI_PROJECT/uyuni/ci-test-server-all-in-one-dev:$UYUNI_VERSION
+    $SERVER_IMAGE
 wait_for_server_ready || exit 1
 $PODMAN_CMD exec -d server prometheus
 

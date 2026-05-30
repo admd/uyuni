@@ -17,6 +17,11 @@ on:
         description: "List of recommended tests. Optional."
         required: false
         type: string
+      prebuilt_server_image:
+        description: "Pre-built server image with compiled code. If set, skips the build step."
+        required: false
+        type: string
+        default: ""
     secrets:
       GH_TOKEN_GALAXY_CI:
         required: false
@@ -191,6 +196,8 @@ jobs:
 
       - name: Start server container
         if: ${{ !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' }}
+        env:
+          PREBUILT_SERVER_IMAGE: ${{ inputs.prebuilt_server_image }}
         run: ./testsuite/podman_runner/08_start_server.sh
 
       - name: Inject cached Ivy JARs into server container
@@ -204,7 +211,7 @@ jobs:
         run: sudo podman cp web/node_modules server:/web/node_modules
 
       - name: Build server code
-        if: ${{ !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' }}
+        if: ${{ !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' && inputs.prebuilt_server_image == '' }}
         run: ./testsuite/podman_runner/09_build_server_code.sh
       #     - name: copy_ca
       #     run: podman exec server bash -c "cp /etc/pki/tls/certs/spacewalk.crt /tmp"
