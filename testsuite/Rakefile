@@ -22,7 +22,8 @@ namespace :cucumber do
   sh "mkdir -p #{result_folder}", verbose: false
   Dir.glob(File.join(Dir.pwd, 'run_sets', '**', '*.yml')).each do |entry|
     features = YAML.safe_load(File.read(entry))
-    fail "Skipping rake task for #{entry}, the YAML file is empty." if features.nil? || features.empty?
+    next unless features.is_a?(Array)
+    fail "Skipping rake task for #{entry}, the YAML file is empty." if features.empty?
     filename = File.basename(entry, '.yml').to_sym
     task_name = "cucumber:#{filename}"
     html_results = "#{result_folder}/output#{node_result_extension}_#{timestamp}-#{filename}.html"
@@ -135,13 +136,31 @@ namespace :utils do
     else
       all_secondary_p = YAML.load_file('run_sets/secondary_parallelizable.yml')
 
-      # Count scenarios per feature file as an execution-time proxy for bin-packing.
-      # Simple line match for "Scenario" (covers both Scenario and Scenario Outline).
       testsuite_dir = __dir__
-      feature_weights = all_secondary_p.map do |feature_path|
-        full_path = File.join(testsuite_dir, feature_path)
-        weight = File.exist?(full_path) ? File.readlines(full_path).count { |l| l.match?(/^\s+Scenario\b/) } : 0
-        [feature_path, weight]
+      timing_file = File.join(testsuite_dir, 'run_sets/data/feature_timings.yml')
+      if File.exist?(timing_file)
+        # Use measured execution times (seconds) for bin-packing when available.
+        timing_data = YAML.load_file(timing_file) || {}
+        feature_weights = all_secondary_p.map do |feature_path|
+          weight = timing_data.fetch(feature_path, nil)
+          if weight.nil?
+            # Fall back to scenario count * 15s for features not yet timed.
+            full_path = File.join(testsuite_dir, feature_path)
+            scenario_count = File.exist?(full_path) ? File.readlines(full_path).count { |l| l.match?(/^\s+Scenario\b/) } : 0
+            weight = [scenario_count * 15, 1].max
+          end
+          [feature_path, weight]
+        end
+        weight_unit = 'seconds'
+      else
+        # Count scenarios per feature file as an execution-time proxy for bin-packing.
+        # Simple line match for "Scenario" (covers both Scenario and Scenario Outline).
+        feature_weights = all_secondary_p.map do |feature_path|
+          full_path = File.join(testsuite_dir, feature_path)
+          weight = File.exist?(full_path) ? File.readlines(full_path).count { |l| l.match?(/^\s+Scenario\b/) } : 0
+          [feature_path, weight]
+        end
+        weight_unit = 'scenarios'
       end
 
       # Greedy bin-packing: assign heaviest features first to the least-loaded shard.
@@ -154,7 +173,10 @@ namespace :utils do
       end
 
       puts "split_sets.length: #{split_sets.length}"
-      shard_weights.each_with_index { |w, i| puts "Shard #{i + 1}: #{split_sets[i].length} features, #{w} scenarios" }
+      shard_weights.each_with_index do |w, i|
+        label = weight_unit == 'seconds' ? "#{w / 60}m#{w % 60}s" : "#{w} #{weight_unit}"
+        puts "Shard #{i + 1}: #{split_sets[i].length} features, #{label}"
+      end
       (1..split_sets.length).each do |i|
         puts "writing #{i}"
         File.write("run_sets/secondary_parallelizable_#{i}.yml", split_sets[i - 1].to_yaml)

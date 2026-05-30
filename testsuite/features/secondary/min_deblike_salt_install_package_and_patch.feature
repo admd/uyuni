@@ -36,6 +36,7 @@ Feature: Install and upgrade package on the Debian-like minion via Salt through 
     Then I should see a "bunch was scheduled" text
     When I wait until the table contains "FINISHED" or "SKIPPED" followed by "FINISHED" in its first rows
 
+  @skip_if_github_validation
   Scenario: Install a patch on the Debian-like minion
     Given I am on the Systems overview page of this "deblike_minion"
     When I follow "Software" in the content area
@@ -59,6 +60,7 @@ Feature: Install and upgrade package on the Debian-like minion via Salt through 
 
   @uyuni
   Scenario: Install a package on the Debian-like minion
+    Given I am on the Systems overview page of this "deblike_minion"
     When I follow "Software" in the content area
     And I follow "Install"
     And I check "andromeda-dummy-2.0" in the list
