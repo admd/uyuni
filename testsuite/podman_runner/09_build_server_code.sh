@@ -36,8 +36,57 @@ $PODMAN_CMD exec server bash -c "[ -d /usr/share/susemanager/www/tomcat/webapps 
 # While we do not have a mirror for the jar files, the easiest workaround is
 # to try again and hope it succeeds.
 
+# Inject a wrapper around obs-to-maven to fix two bugs in repo.Repo.get_binary:
+# 1. urlopen() has no timeout, so a TCP stall hangs for ~110s (OS retransmission limit).
+#    Fix: socket.setdefaulttimeout(30) caps each attempt at 30s.
+# 2. urlopen() wraps TimeoutError and redirect failures as urllib.error.URLError, but the
+#    retry loop only catches ConnectionResetError/ConnectionRefusedError/HTTPError, so
+#    URLError escapes immediately with no retry.
+#    Fix: outer retry catches URLError with increasing backoff.
+$PODMAN_CMD exec server bash -c 'cat > /usr/local/bin/obs-to-maven << '"'"'PYEOF'"'"'
+#!/usr/bin/env python3
+import socket, urllib.error, time, sys, logging
+socket.setdefaulttimeout(30)
+import obs_maven.repo as repo
+import obs_maven.core as core
+_orig_get_binary = repo.Repo.get_binary
+def _get_binary_with_retry(self, path, target, mtime):
+    for attempt in range(1, 5):
+        try:
+            _orig_get_binary(self, path, target, mtime)
+            return
+        except urllib.error.URLError as e:
+            if attempt < 4:
+                wait = 30 * attempt
+                logging.warning("obs-to-maven: URLError on attempt %d/4: %s. Retrying in %ds...", attempt, e, wait)
+                time.sleep(wait)
+            else:
+                raise
+repo.Repo.get_binary = _get_binary_with_retry
+sys.exit(core.main())
+PYEOF
+chmod +x /usr/local/bin/obs-to-maven'
+
 set +e # Temporarily disable 'exit on error'
-$PODMAN_CMD exec server bash -c 'MAX_WAIT=1200; START_TIME=$(date +%s); cd /java; while ! ant -f manager-build.xml ivy; do CURRENT_TIME=$(date +%s); ELAPSED_SECONDS=$((CURRENT_TIME - START_TIME)); if [ "$ELAPSED_SECONDS" -ge "$MAX_WAIT" ]; then echo "Ant Ivy build failed: Timed out after $((MAX_WAIT / 60)) minutes." >&2; echo "Check GH Runner IP:" >&2; curl https://api.ipify.org ||:; exit 1; fi; echo "Ant Ivy build failed. Retrying immediately! (Elapsed: $ELAPSED_SECONDS/$MAX_WAIT seconds)"; done; echo "Ant Ivy build succeeded."'
+$PODMAN_CMD exec server bash -c '
+  MAX_WAIT=1200
+  RETRY_DELAY=60
+  START_TIME=$(date +%s)
+  cd /java
+  while ! ant -f manager-build.xml ivy; do
+    CURRENT_TIME=$(date +%s)
+    ELAPSED_SECONDS=$(( CURRENT_TIME - START_TIME ))
+    if [ "${ELAPSED_SECONDS}" -ge "${MAX_WAIT}" ]; then
+      echo "Ant Ivy build failed: Timed out after $(( MAX_WAIT / 60 )) minutes." >&2
+      echo "Check GH Runner IP:" >&2
+      curl https://api.ipify.org ||:
+      exit 1
+    fi
+    echo "Ant Ivy build failed (elapsed: ${ELAPSED_SECONDS}s / ${MAX_WAIT}s). Retrying in ${RETRY_DELAY}s (mirrors may be temporarily unavailable)..."
+    sleep ${RETRY_DELAY}
+  done
+  echo "Ant Ivy build succeeded."
+'
 ANT_BUILD_IVY_COMMAND=$?
 set -e # Re-enable 'exit on error'
 

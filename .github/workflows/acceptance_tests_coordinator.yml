@@ -160,6 +160,9 @@ jobs:
       - name: Build server code
         run: ./testsuite/podman_runner/09_build_server_code.sh
 
+      - name: Stop services before image commit
+        run: sudo podman exec server bash -c "systemctl stop tomcat taskomatic postgresql || true"
+
       - name: Commit and push pre-built server image
         id: push
         run: |
@@ -210,3 +213,32 @@ jobs:
       prebuilt_server_image: ${{ needs.pre-build.result == 'success' && needs.pre-build.outputs.prebuilt_image || '' }}
     secrets:
       GH_TOKEN_GALAXY_CI: ${{ secrets.GH_TOKEN_GALAXY_CI }}
+
+  cleanup-prebuilt-image:
+    name: Cleanup pre-built image
+    needs: [pre-build, acceptance-tests, additional-tests]
+    if: ${{ always() && needs.pre-build.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete pre-built server image from ghcr.io
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          PACKAGE_NAME="${{ github.event.repository.name }}%2Fci-test-server-prebuilt"
+          TAG="${{ github.sha }}"
+
+          VERSION_ID=$(gh api "/users/${OWNER}/packages/container/${PACKAGE_NAME}/versions" \
+            --jq ".[] | select(.metadata.container.tags[] == \"${TAG}\") | .id" 2>/dev/null || \
+            gh api "/orgs/${OWNER}/packages/container/${PACKAGE_NAME}/versions" \
+            --jq ".[] | select(.metadata.container.tags[] == \"${TAG}\") | .id" 2>/dev/null)
+
+          if [ -n "$VERSION_ID" ]; then
+            echo "Deleting version $VERSION_ID (tag: $TAG)"
+            gh api --method DELETE "/users/${OWNER}/packages/container/${PACKAGE_NAME}/versions/${VERSION_ID}" 2>/dev/null || \
+            gh api --method DELETE "/orgs/${OWNER}/packages/container/${PACKAGE_NAME}/versions/${VERSION_ID}"
+          else
+            echo "No image found for tag $TAG, nothing to delete"
+          fi
