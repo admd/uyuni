@@ -27,8 +27,10 @@ wait_for_server_ready() {
             echo "--- Direct Tomcat HTTP check ---"
             $podman_cmd exec server curl -fs http://localhost:8080/rhn/Login.do -o /dev/null -w "%{http_code}" ||:
             echo ""
-            echo "--- Apache2 HTTPS check verbose ---"
-            $podman_cmd exec server curl -kfv https://localhost/rhn/Login.do -o /dev/null 2>&1 | tail -n 20 ||:
+            echo "--- Tomcat initialization errors ---"
+            $podman_cmd exec server journalctl -u tomcat --no-pager | grep -E "SEVERE|ERROR|Exception|Caused by" | head -30 ||:
+            echo "--- Entrypoint init.d scripts ---"
+            $podman_cmd exec server ls -la /docker-entrypoint-init.d/ ||:
             echo "--- END DEBUG DUMP ---"
             return 1
         fi
