@@ -28,6 +28,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 env:
   UYUNI_PROJECT: uyuni-project
@@ -193,6 +194,23 @@ jobs:
       - name: Setup server container
         if: ${{ !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' }}
         run: ./testsuite/podman_runner/07_server_setup.sh
+
+      - name: Wait for pre-built server image
+        if: ${{ !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' && inputs.prebuilt_server_image != '' }}
+        env:
+          PREBUILT_SERVER_IMAGE: ${{ inputs.prebuilt_server_image }}
+        run: |
+          echo "Waiting for pre-built image: $PREBUILT_SERVER_IMAGE"
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo -i podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for i in $(seq 1 30); do
+            if sudo -i podman pull "$PREBUILT_SERVER_IMAGE" >/dev/null 2>&1; then
+              echo "Pre-built image pulled successfully"
+              exit 0
+            fi
+            [ $i -eq 30 ] && { echo "Timed out waiting for pre-built image after 15 minutes"; exit 1; }
+            echo "Image not yet available (attempt $i/30), waiting 30s..."
+            sleep 30
+          done
 
       - name: Start server container
         if: ${{ !inputs.skip_tests && needs.filters.outputs.require_acceptance_tests == 'true' }}

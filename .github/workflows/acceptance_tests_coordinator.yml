@@ -185,21 +185,19 @@ jobs:
       GH_TOKEN_GALAXY_CI: ${{ secrets.GH_TOKEN_GALAXY_CI }}
 
   acceptance-tests:
-    needs: [determine_tests, pre-build]
-    if: ${{ always() && (needs.pre-build.result == 'success' || needs.pre-build.result == 'skipped') }}
+    needs: [determine_tests]
     name: Acceptance
     uses: ./.github/workflows/acceptance_tests_base.yml
     with:
       tests: "18_run_secondary_tests.sh"
       server_id: "acceptance"
       skip_tests: ${{ needs.determine_tests.outputs.run_full_testsuite == 'false' }}
-      prebuilt_server_image: ${{ needs.pre-build.result == 'success' && needs.pre-build.outputs.prebuilt_image || '' }}
+      prebuilt_server_image: ${{ needs.determine_tests.outputs.run_full_testsuite == 'true' && format('ghcr.io/{0}/ci-test-server-prebuilt:{1}', github.repository, github.sha) || '' }}
     secrets:
       GH_TOKEN_GALAXY_CI: ${{ secrets.GH_TOKEN_GALAXY_CI }}
 
   additional-tests:
-    needs: [determine_tests, pre-build]
-    if: ${{ always() && (needs.pre-build.result == 'success' || needs.pre-build.result == 'skipped') }}
+    needs: [determine_tests]
     name: (${{ matrix.set }}) Additional
     uses: ./.github/workflows/acceptance_tests_base.yml
     strategy:
@@ -210,7 +208,7 @@ jobs:
       tests: "22_run_secondary_parallelizable_tests_subset.sh ${{ matrix.set }}"
       server_id: "additional_${{ matrix.set }}"
       skip_tests: ${{ needs.determine_tests.outputs.run_full_testsuite == 'false' }}
-      prebuilt_server_image: ${{ needs.pre-build.result == 'success' && needs.pre-build.outputs.prebuilt_image || '' }}
+      prebuilt_server_image: ${{ needs.determine_tests.outputs.run_full_testsuite == 'true' && format('ghcr.io/{0}/ci-test-server-prebuilt:{1}', github.repository, github.sha) || '' }}
     secrets:
       GH_TOKEN_GALAXY_CI: ${{ secrets.GH_TOKEN_GALAXY_CI }}
 
