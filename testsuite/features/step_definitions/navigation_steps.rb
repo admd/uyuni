@@ -628,6 +628,10 @@ Given(/^I am authorized as "([^"]*)" with password "([^"]*)"$/) do |user, passwd
     # No need to logout
   end
 
+  # The sign-out click is async: if the logout navigation stalled or never reached the
+  # login page, fall back to visiting the logout URL directly.
+  visit("#{Capybara.app_host}/rhn/Logout.do") unless has_selector?('#username-field', wait: 2)
+
   raise ScriptError, 'Login page is not correctly loaded' unless has_field?('username')
 
   fill_in('username', with: $current_user)

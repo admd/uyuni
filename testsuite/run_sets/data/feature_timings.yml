@@ -42,8 +42,8 @@
 "features/secondary/srv_delete_channel_from_ui.feature": 16
 "features/secondary/srv_delete_channel_with_tool.feature": 7
 "features/secondary/srv_maintenance_windows.feature": 1
-"features/secondary/srv_handle_software_channels_with_ISS_v2.feature": 58
-"features/secondary/srv_handle_config_channels_with_ISS_v2.feature": 46
+"features/secondary/srv_handle_software_channels_with_ISS_v2.feature": 1
+"features/secondary/srv_handle_config_channels_with_ISS_v2.feature": 1
 "features/secondary/srv_salt_git_pillar.feature": 1
 "features/secondary/srv_logfile.feature": 1
 "features/secondary/srv_cobbler_sync.feature": 19
@@ -60,7 +60,7 @@
 "features/secondary/minssh_salt_install_package_and_patch.feature": 1
 "features/secondary/minssh_ansible_control_node.feature": 1
 "features/secondary/min_deblike_monitoring.feature": 10
-"features/secondary/min_deblike_salt_install_with_staging.feature": 227
+"features/secondary/min_deblike_salt_install_with_staging.feature": 245
 "features/secondary/min_deblike_salt_install_package_and_patch.feature": 65
 "features/secondary/min_deblike_remote_command.feature": 1
 "features/secondary/min_bootstrap_negative.feature": 1
